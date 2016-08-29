@@ -1,0 +1,30 @@
+{
+   "_id": "a02c9784d0700c40e5bb13d7720027ec",
+   "_rev": "1-8545873ec99a94b124a5190a436a3426",
+   "doctype": "telemedicine_receipt",
+   "insert_ts": "2016-06-08T01:37:20.529Z",
+   "user_id": "8183a4d3d9eb9fa429f3fcfe22565948$08-Aug-2015-04-57-35-360",
+   "email_sent_on": "SHS-76329207",
+   "dhp_code": "kbulusu@gmail.com",
+   "finalize": "Yes",
+   "doctor_name": "Sensory Health Systems Inc",
+   "bill_history": {
+       "billing_appointment_date": "2016-06-08T01:37:20.529Z",
+       "bill_additional_notes": "asdf",
+       "total_bill_amount": "750",
+       "total_bill_discount": "0",
+       "total_bill_topay": "750",
+       "total_cash_paid": "0",
+       "total_online_paid": "750",
+       "total_balance_due": "0",
+       "insurance_balance_due": "0",
+       "subjective_billrecords": [
+       ],
+       "assessment_billrecords": {
+           "date": "2016-06-08T01:37:20.529Z",
+           "assessment": "00000",
+           "amount": "750",
+           "discount": "0"
+       }
+   }
+}

@@ -1,0 +1,76 @@
+case '23':
+			try {
+				
+				$doc       = $client->getDoc($record->value->doc_id);
+				$doctor_doc = $users_client->getDoc($doc->doctor_id);
+				$client->key($doctor_doc->dhp_code);
+				$client->reduce(false);
+				$client->include_docs(True);
+				$comsettings = $client->getView('tamsa', 'getCommunicationSettings');
+				
+				//new_lab_order_results_availabel
+				if($comsettings->rows[0]->doc->sms_to_patient_setting->new_lab_order_results_availabel == "Never"){
+					// GETTING PATIENTS 
+					$users_personal_details_client->key($doc->user_id);						
+					$users_personal_details_client->reduce(false);
+					$user_details = $users_personal_details_client->getView('tamsa', 'getPatientInformation');
+					//Send sms to patient
+					$fields_array_sms = array(
+						"To"   => $user_details->rows[0]->value->phone,
+						"From" => "+14085602499",
+						"Body" => "Hello ".$record->value->patient_name.", Your lab result available,\n Test Name : ".$doc->document_name."\n Comment : ".$record->value->comment. "\n By : ".$record->value->doctor_name
+					);
+						//$result_sms_obj = sendSms($fields_array_sms);
+				}		
+
+				//Send email to patient 
+				$fields_array_mail = array(
+					"from"    => "Sensory Health Systems Admin <noreply@sensoryhealthsystems.com>",
+					"to"      => $record->value->email,
+					"subject" => "Comments on your lab result by ".$record->value->doctor_name,
+					"text"    => "Hello ".$record->value->patient_name.",\n Test Name : ".$doc->document_name."\n Comment : ".$record->value->comment. "\n By : ".$record->value->doctor_name
+			    );
+					//print_r($fields_array_mail);
+		     	//$result_obj = sendMail($fields_array_mail);
+
+				// SEND SMS TO DOCTOR
+         	if($comsettings->rows[0]->doc->sms_setting->sms_to_doctor->lab_upload_doctor == 1) {
+         	$fields_array_sms = array(
+						"To"   => $doctor_doc->alert_email,
+						"From" => "+14085602499",
+						"Body" => "Hello ".$doctor_doc->first_name." ".$doctor_doc->last_name	.",".$record->value->patient_name." lab result available,\n Test Name : ".$doc->document_name."\n Comment : ".$record->value->comment. "\n By : ".$record->value->doctor_name
+					);
+					 print_r($fields_array_sms);
+		      //$result_sms_obj = sendSms($fields_array_sms);
+				}
+
+				// SMS TO hospital_admin
+				$yes = "Yes";
+				if($comsettings->rows[0]->doc->sms_setting->sms_to_hospital_admin->lab_upload_doctor == 0) {
+					$doctor_details->key(array("".$doctor_doc->dhp_code."","".$yes.""));
+          $doctor_details->include_docs(True);
+          $hospital_details = $doctor_details->getView('tamsa', 'getUserByDhpId');
+          if(count($hospital_details->rows)>0){
+          	for($i=0;$i<count($hospital_details->rows);$i++){
+          		$fields_array_sms = array(
+								"To"   => $hospital_details->rows[$i]->doc->alert_phone,
+								"From" => "+14085602499",
+								"Body" => "Dr ".$doctor_doc->first_name." ".$doctor_doc->last_name	." patient:".$record->value->patient_name." lab result available,\n Test Name : ".$doc->document_name."\n Comment : ".$record->value->comment 
+							);
+							//$result_sms_obj = sendSms($fields_array_sms);
+          	}
+          }		
+				}
+
+				//$record->value->processed = "Yes";
+				//$response                 = $client->storeDoc($record->value);
+			} 
+			catch (Exception $e) {
+	         	echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
+	         	echo ("<pre>");print_r($record->value->operation_case);echo("</pre>");
+	     //    	$record->value->processed = "Yes";
+						// $response  = $client->storeDoc($record->value);
+			}
+
+			$count["23"]++;
+			break;	

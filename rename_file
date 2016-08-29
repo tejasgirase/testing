@@ -1,0 +1,28 @@
+done :-Rename "Practice-Info -> Hospital Misc Document" --> "Practice Info -> Hospital Forms"
+done :-Rename "Practice-Info -> Documents" --> "Practice Info -> Upload Patients reports and documents"
+done :-Rename "Personal Details & Medical History" -> "Patient Information "
+done :-Rename "Elabs ordering & Results" to "Elabs"
+done :-Remove the following under "Patient Information" : "The reason for most current/recent visit, visit type , subjective"
+done :-Rename "Export to ICS" to "Export schedule to sync with your android phone" https://www.babybeeps.com/my-account.html#/appointments
+done :-"Patient Information ->Summary-> Telemedicine" ---> "Patient Information ->Summary-> Telemedicine History"
+done :-Please remove the grey bar/shadow for the text for settings. See attached snapshot. Show show a thin orange line as underline or just show change of colour of text when selected..It uplifts the page perception.
+done :-"Patient Information ->Summary-> Scores" ---> "Patient Information ->Summary-> Clinical Risk Scores"
+done :-Rename "Patients-Info" (tile) -> "Import Patients" to "Add patients to your Practice"
+done :-Rename "Patients-Info" (tile) -> "Search" to "Update Patient Info"
+done :-Under "Elabs", reorder the sub tabs in the following order: a) Elab Ordering b) View/Cancel Order (yes please add cancel) c) Lab Results
+done :-Under Elabs, Move Other/Video as one another icon under Lab results.
+done :-As we merged the New lab order & new -imaging order into one screen , update the menu in critical patients in both Your Patients ->Critical patients/Referral/Regular & in Daily Dashboard to " New elab & imaging order " . Existing snapshot attached for reference.
+done :-Move "Patient Notes" & "Immunization" as tab under "Patient Information" -> "Summary" and show next to telemedicine	
+done :-Move the following under "Patient Information" & show as tab next to "Timeline" : a) Current Medications b) Elabs
+done :-Create "Misc Settings" under Practice-Info ->Settings and then add the following a) Show Front Desk view under Practice dashboard . If enabled, show it as tile under practice dashboard else hide it. If the user logged in is non doctor/admin/super admin etc please show the view by default.
+
+
+
+On pending:-In Front-Desk, when user profile is clicked, please open it diff tab else we have to show it as popup . User shouldnt be navigating so much.
+----------------------------------------------------------------------------------------------------------------------------------
+
+
+On hold :-Move the following under "Practice Dashboard" as menu : a) Your Patients b) Billing
+On hold :-Move Patients Info tile as sub tab under "Practice Info"
+---------------------------------------------------------------------------------------------------------------------------
+

@@ -1,0 +1,177 @@
+$("#Patient_immunization").parent().find("div").removeClass("CategTextActive");
+  $("#Patient_immunization").addClass("CategTextActive");activatePatientImmunizations();
+  Patient_immunization
+
+
+  $("body").on("click","#patient_note_link",function(){
+   39      $state.go("patientdetails.patient_notes",{user_id:$stateParams.user_id});
+   40    });
+
+  .state('patientdetails.patient_notes', {
+    url: '/patient_notes',
+    parent:'patientdetails',
+    params: {
+      user_id: null,
+    },
+    views: {
+      'patient_content': {
+        templateUrl: 'template/patient-notes.html',
+        controller: 'patientNotesController'
+      },
+      'menu':{
+        templateUrl: 'template/patient-menu.html',
+        controller: 'patientDetailsController'
+      },
+      'footer':{
+        templateUrl: 'template/footer.html',
+      }
+    }
+  })
+
+  app.controller("patientNotesController",function($scope,$state,$stateParams,tamsaFactories){
+  tamsaFactories.pdBack();
+  tamsaFactories.getSearchPatient($stateParams.user_id, "patientImageLink", "", getPatientNotes);
+});
+
+
+
+
+  $("body").on("click", "#immunization_link", function(){
+   59      $state.go("patientdetails.patient_immunizations",{user_id:$stateParams.user_id});
+   60    });
+
+
+
+
+  <li class="pd menu_items">
+      <a id="immunization_link" ui-sref="patientdetails.patient_immunizations({user_id:patient_id})" class="safe-hover-sidebar pointer">Immunization</a>
+    </li>
+
+
+
+
+    .state('patientdetails.patient_immunizations', {
+    url: '/patient_immunizations',
+    parent:'patientdetails',
+    params: {
+      user_id: null,
+    },
+    views: {
+      'patient_content': {
+        templateUrl: 'template/patient-immunizations.html',
+        controller: 'patientImmunizationsController'
+      },
+      'menu':{
+        templateUrl: 'template/patient-menu.html',
+        controller: 'patientDetailsController'
+      },
+      'footer':{
+        templateUrl: 'template/footer.html',
+      }
+    }
+  })
+
+
+
+    app.controller("patientImmunizationsController",function($scope,$state,$stateParams,tamsaFactories){
+  tamsaFactories.pdBack();
+  tamsaFactories.getSearchPatient($stateParams.user_id, "patientImageLink", "", activatePatientImmunizations);
+});
+
+$("body").on("click","#patient_note_link",function(){
+    $state.go("patientdetails.patient_notes",{user_id:$stateParams.user_id});
+  });
+
+
+   <li class="pd menu_items" style="display:list-item; border-left: 1px solid rgb(255, 255, 255); margin-left:179px;">
+      <a id="patient_note_link" ui-sref="patientdetails.patient_notes({user_id:patient_id})">Patient Notes</a>
+    </li>
+
+
+
+
+
+    $("body").on("click", "#medication_tab_link", function(){
+    $state.go("patientdetails.patient_medications",{user_id:$stateParams.user_id});
+  });
+
+  <li class="pd menu_items" id="current_madication">
+      <a id="medication_tab_link" role="button" ui-sref="patientdetails.patient_medications({user_id:patient_id})" class="pointer">Current Medications</a>
+    </li>
+    
+
+    $("body").on("click", "#lab_results_link", function(){
+    $state.go("patientdetails.patient_elabs",{user_id:$stateParams.user_id});
+  });
+
+  <li class="pd menu_items">
+      <a ui-sref="patientdetails.patient_elabs({user_id:patient_id})" id="lab_results_link" class="pointer">Elabs</a>
+    </li>
+
+
+    .state('patientdetails.patient_elabs', {
+    url: '/patient_elabs',
+    parent:'patientdetails',
+    params: {
+      user_id: null,
+      tab_id:null,
+      attachment_id:null
+    },
+    views: {
+      'patient_content': {
+        templateUrl: 'template/e-labs.html',
+        controller: 'patientELabController'
+      },
+      'menu':{
+        templateUrl: 'template/patient-menu.html',
+        controller: 'patientDetailsController'
+      },
+      'footer':{
+        templateUrl: 'template/footer.html',
+      }
+    }
+  })
+
+
+// app.controller("patientELabController",function($scope,$state,$stateParams,tamsaFactories){
+//   tamsaFactories.pdBack();
+//   tamsaFactories.getSearchPatient($stateParams.user_id, "patientImageLink", "", activatePatientELabs);
+  
+// });
+
+
+
+
+  // .state('patientdetails.patient_medications', {
+  //   url: '/patient_medication',
+  //   parent:'patientdetails',
+  //   params: {
+  //     user_id: null,
+  //   },
+  //   views: {
+  //     'patient_content': {
+  //       templateUrl: 'template/patient-medications.html',
+  //       controller: 'patientMedicationsController'
+  //     },
+  //     'menu':{
+  //       templateUrl: 'template/patient-menu.html',
+  //       controller: 'patientDetailsController'
+  //     },
+  //     'add_medication@patientdetails.patient_medications':{
+  //       templateUrl: 'template/add-medication.html',
+  //       controller: 'patientAddMedicationController'
+  //     },
+  //     'footer':{
+  //       templateUrl: 'template/footer.html',
+  //     }
+  //   }
+  // })
+
+
+
+  
+
+app.controller("patientMedicationsController",function($scope,$state,$stateParams,tamsaFactories){
+  tamsaFactories.pdBack();
+  tamsaFactories.getSearchPatient($stateParams.user_id, "patientImageLink", "", activatePatientMedication);
+});

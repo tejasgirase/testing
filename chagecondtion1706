@@ -1,0 +1,146 @@
+case '18':
+
+			try {
+				$nowdate = date('Y-m-d');
+				$string_date = strtotime("-1 day",strtotime($nowdate));
+				$doc        = $client->getDoc($record->value->appointment_id);
+				$dateapp = substr(getGmtStringToIstTime($doc->reminder_start),0,-9);
+				$strtotime = strtotime($dateapp);
+				if($string_date <= $strtotime){
+					
+					// If in the appointment doc doctor_id is saved than only procced further else mark the record processed
+
+					if (isset($doc->doctor_id)) {
+						$doctor_doc = $users_client->getDoc($doc->doctor_id);
+					}
+					else {
+						 $record->value->processed = "Yes";
+						$response = $client->storeDoc($record->value);
+						break;
+					}
+
+					if (isset($doc->consultant_id)) {
+						$consultant_doc = $users_client->getDoc($doc->consultant_id);
+					}
+
+					if (!isset($doc->user_id)) {
+					    $client->deleteDoc($doc);
+					     $record->value->processed = "Yes";
+						//$response                 = $client->storeDoc($record->value);
+						$count["18"]++;
+						break;
+					}
+					$user_doc = $users_client->getDoc($doc->doctor_id);
+		       		$users_personal_details_client->key($doc->user_id);
+					$response = $users_personal_details_client->getView('tamsa','getPatientInformation');
+
+					if (count($response->rows) > 0) {
+						$client->key($doctor_doc->dhp_code);
+						$client->reduce(false);
+						$client->include_docs(True);
+						$comsettings = $client->getView('tamsa', 'getCommunicationSettings');
+						if($comsettings->rows[0]->value->email_setting->online_scheduling_emails == 1){
+							$html = getAppointmentHtml("".$response->rows[0]->value->first_nm." ".$response->rows[0]->value->last_nm."", getGmtStringToIstTime($doc->reminder_start), $user_doc->hospital_affiliated, $user_doc->city, $user_doc->hospital_phone);
+
+							$attachment = array();
+							if(isset($record->value->hospital_document)) {
+								$hospital_document           = $client->getDoc($record->value->hospital_document);
+								$hospital_document_file_name = array_keys((array)$hospital_document->_attachments)[0];
+								set_time_limit(0);
+								$url  = urldecode("http://".DB_HOST."/".COUCH_DB."/".$record->value->hospital_document."/".$hospital_document_file_name);
+								$file = file_get_contents(str_replace(" ","%20",$url));
+								file_put_contents($hospital_document_file_name, $file);
+								$attachment[] = $hospital_document_file_name;	
+							}
+
+							if (isset($record->value->service_documents)) {
+								foreach ($record->value->service_documents as $service_doc_id) {
+									$service_doc           = $client->getDoc($service_doc_id);
+									$service_doc_file_name = array_keys((array)$service_doc->_attachments)[0];
+									set_time_limit(0);
+									$url  = urldecode("http://".DB_HOST."/".COUCH_DB."/".$service_doc_id."/".$service_doc_file_name);
+									$file = file_get_contents(str_replace(" ","%20",$url));
+									file_put_contents($service_doc_file_name, $file);
+									$attachment[] = $service_doc_file_name;
+								}
+							}
+
+							$fields_array_mail = array(
+								"from"    => "Sensory Health Systems Admin <noreply@sensoryhealthsystems.com>",
+								"to"      => $response->rows[0]->value->user_email,
+								"subject" => "Appointment Mail",
+								"html"    => $html
+						    );
+
+							if (count($attachment) > 0) {
+								$attachment_to_send = array("attachment" => $attachment);
+								$result_obj = sendMail($fields_array_mail,$attachment_to_send);
+								foreach ($attachment as $file_to_delete) {
+									unlink($file_to_delete);
+								}
+							}
+							else {
+								$result_obj = sendMail($fields_array_mail);
+							}
+						}	
+
+			      // SEND SMS TO DOCTOR***************************
+			      $yes = "Yes";
+						if($comsettings->rows[0]->doc->sms_setting->sms_to_doctor->new_appointment == 1) {
+							$fields_array_sms = array(
+								"To"   => $doctor_doc->alert_phone,
+								"From" => "+14085602499",
+								"Body" => "Dr ".$user_doc->first_name." ".$user_doc->last_name." has scheduled appointment\nAppointment Note: ". $doc->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($doc->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($doc->reminder_start),-9)." to".substr(getGmtStringToIstTime($doc->reminder_end),-9)
+							);
+							$result_sms_obj = sendSms($fields_array_sms);
+	          }
+
+						// SMS TO hospital_admin
+
+						if($comsettings->rows[0]->doc->sms_setting->sms_to_hospital_admin->new_appointment == 1) {
+							$doctor_details->key(array("".$doctor_doc->dhp_code."","".$yes.""));
+	            $doctor_details->include_docs(True);
+	            $hospital_details = $doctor_details->getView('tamsa', 'getUserByDhpId');
+	            if(count($hospital_details->rows)>0){
+	            	for($i=0;$i<count($hospital_details->rows);$i++){
+	            		$fields_array_sms = array(
+										"To"   => $hospital_details->rows[$i]->doc->alert_phone,
+										"From" => "+14085602499",
+										"Body" => "Dr ".$user_doc->first_name." ".$user_doc->last_name." has scheduled appointment\nAppointment Note: ". $doc->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($doc->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($doc->reminder_start),-9)." to".substr(getGmtStringToIstTime($doc->reminder_end),-9)
+									);
+									$result_sms_obj = sendSms($fields_array_sms);		
+								}
+	            }
+						}
+
+						if (isset($consultant_doc)) {
+							$client->key($consultant_doc->dhp_code);
+							$client->reduce(false);
+							$client->include_docs(True);
+							$consultant_comsettings = $client->getView('tamsa', 'getCommunicationSettings');
+							
+			         		if($consultant_comsettings->rows[0]->doc->sms_setting->sms_to_doctor->new_appointment == 1) {
+								$fields_array_sms = array(
+									"To"   => $consultant_doc->alert_phone,
+									"From" => "+14085602499",
+									"Body" => "Dr ".$user_doc->first_name." ".$user_doc->last_name." has scheduled appointment\nAppointment Note: ". $doc->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($doc->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($doc->reminder_start),-9)." to".substr(getGmtStringToIstTime($doc->reminder_end),-9)
+								);
+								$result_sms_obj = sendSms($fields_array_sms);
+							}
+						}
+
+						 $record->value->processed = "Yes";
+						$response = $client->storeDoc($record->value);
+					}
+				}			
+			} 
+			catch (Exception $e) {
+				if ( $e->getCode() == 404 ) {
+        	echo "Document some_doc_id does not exist !";
+        	echo ("<pre>");print_r($record->value->operation_case);echo("</pre>");
+           $record->value->processed = "Yes";
+	   			$response = $client->storeDoc($record->value);
+	   	  }	
+			}
+			$count["18"]++;
+			break;

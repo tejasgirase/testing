@@ -1,0 +1,1259 @@
+
+ 
+ 		        $result_obj = sendMail($fields_array_mail);
+          		$record->value->processed = "Yes";
+-	   			$response                 = $client->storeDoc($record->value);
++	   				$response                 = $client->storeDoc($record->value);
+ 			}
+ 			catch (Exception $e) {
+ 				if ( $e->getCode() == 409 ) {
+
+    		         	$result_obj = sendMail($error_mail);
+ 
+    	         		$record->value->processed = "Yes";
+-   		   			$response                 = $client->storeDoc($record->value);
++   		   				$response                 = $client->storeDoc($record->value);
+ 			    }
+ 			    else {
+ 					echo ("<pre>");print_r($e);echo("</pre>");
+
+ 			$count["1"]++;
+ 			break;
+ 
+-		//Change the password of the user specified in user_id and and send the new password to the user
++		//Change the password of the user specified in user_id and send the new password to the user
+ 		case '2':
+ 			try {
+ 				// Getting the orignal document of the user whose password needs to be chnaged
+
+ 		    );
+ 
+ 			if (isset($record->value->doctor_ids)) {
+-				echo ("<pre>");print_r($record->value->doctor_ids);echo("</pre>");
+-
+ 				if (count($record->value->doctor_ids) > 0) {
+ 				  $doctors = [];
+ 				  foreach ($record->value->doctor_ids as $key => $value) {
+
+ 	        $result_obj = sendMail($patient_registration_mail);
+ 
+ 			$record->value->processed = "Yes";
+-			$response                 = $client->storeDoc($record->value);
++				$response                 = $client->storeDoc($record->value);
+ 
+ 			$count["6"]++;
+ 			break;
+
+ 		//Process of sending mail after Telemedicine Subscription
+ 		case '7':
+ 			try {
++				if(isset($record->value->user_id)){
+ 				$users_personal_details_client->key($record->value->user_id);
+ 				$contact_details = $users_personal_details_client->getView('tamsa', 'getPatientInformation');
++					if(count($contact_details->rows[0]) > 0 ){
++						$fields_array_mail = array(
++							"from"    => "Telemedicine <noreply@sensoryhealthsystems.com>",
++							"to"      => TELEMEDICINE_EMAIL,
++							"subject" => "Telemedicine Inquiry (".$record->value->Health_Category.")",
++							"text"    => "First Name : ".$contact_details->rows[0]->value->first_nm."\n"."Last Name : ".$contact_details->rows[0]->value->last_nm."\n"."Email : ".$contact_details->rows[0]->value->user_email."\n"."Phone : ".$contact_details->rows[0]->value->phone."\n"."Symptoms : ".implode(" ", $record->value->symptoms)."\n"."Closest Symptom : ".$record->value->Health_Category."\n"."Subject : ".$record->value->subject."\n"."Health issue : ".$record->value->Health_Issue_Description.""
++					    );
+ 
+-				$fields_array_mail = array(
+-					"from"    => "Telemedicine <noreply@sensoryhealthsystems.com>",
+-					"to"      => TELEMEDICINE_EMAIL,
+-					"subject" => "Telemedicine Inquiry (".$record->value->Health_Category.")",
+-					"text"    => "First Name : ".$contact_details->rows[0]->value->first_nm."\n".
+-					"Last Name : ".$contact_details->rows[0]->value->last_nm."\n".
+-					"Email : ".$contact_details->rows[0]->value->user_email."\n".
+-					"Phone : ".$contact_details->rows[0]->value->phone."\n".
+-					"Symptoms : ".implode(" ", $record->value->symptoms)."\n".
+-					"Closest Symptom : ".$record->value->Health_Category."\n".
+-					"Subject : ".$record->value->subject."\n".
+-					"Health issue : ".$record->value->Health_Issue_Description
+-			    );
+-
+-		    	$fields_array_mail_to_patient = array(
+-		    		"from"    => "Telemedicine <noreply@sensoryhealthsystems.com>",
+-		    		"to"      => $contact_details->rows[0]->value->user_email,
+-		    		"subject" => "Telemedicine Inquiry (".$record->value->Health_Category.") and payemnt receipt",
+-		    		"text"    => "Hello, \n".$contact_details->rows[0]->value->first_nm." ".$contact_details->rows[0]->value->last_nm."\n Your payement of $15 has been recived. You will receive response from us in next 24-48 hours"
+-		        );
++				    	$fields_array_mail_to_patient = array(
++				    		"from"    => "Telemedicine <noreply@sensoryhealthsystems.com>",
++				    		"to"      => $contact_details->rows[0]->value->user_email,
++				    		"subject" => "Telemedicine Inquiry (".$record->value->Health_Category.") and payemnt receipt",
++				    		"text"    => "Hello, \n".$contact_details->rows[0]->value->first_nm." ".$contact_details->rows[0]->value->last_nm."\n Your payement of $15 has been recived. You will receive response from us in next 24-48 hours"
++				        );
+ 
+ 	         	$result_obj         = sendMail($fields_array_mail);
+ 	         	$result_obj_patient = sendMail($fields_array_mail_to_patient);
+ 
+-   				$record->value->processed = "Yes";
+-   				$response                 = $client->storeDoc($record->value);
++	   				$record->value->processed = "Yes";
++  	 				$response                 = $client->storeDoc($record->value);
++   				}
++   			}	
+ 			}
+ 			catch (Exception $e) {
+ 				if ( $e->getCode() == 404 ) {
+
+ 		//Process of sending mail after Prescribing medication to patient	
+ 		case '9' :
+ 			try {
+-					$pharmacy_doc = $client->getDoc($record->value->pharmacy_doc_id);
+-					$doctor_doc = $users_client->getDoc($record->value->doctor_id);
+-					
+-					$users_personal_details_client->key($record->value->user_id);
+-					$user_info = $users_personal_details_client->getView('tamsa', 'getPatientInformation');
++					if(isset($record->value->pharmacy_doc_id)){
++						$pharmacy_doc = $client->getDoc($record->value->pharmacy_doc_id);
++						$doctor_doc = $users_client->getDoc($record->value->doctor_id);
++						
++						$users_personal_details_client->key($record->value->user_id);
++						$user_info = $users_personal_details_client->getView('tamsa', 'getPatientInformation');
+ 
+-					$client->key($record->value->prescription_id);
+-					$client->include_docs(True);
+-					$medication_info = $client->getView('tamsa', 'getMedicationByPrescriptionId');
+-					if (count($user_info->rows) > 0) {
+-						$html = '<html xmlns="http://www.w3.org/1999/xhtml"><body><h4>Following medicine has been prescribed to:</h4><table><tr><td><strong>Patient:</strong></td><td>'.$user_info->rows[0]->value->first_nm.'</td></tr>';
++						$client->key($record->value->prescription_id);
++						$client->include_docs(True);
++						$medication_info = $client->getView('tamsa', 'getMedicationByPrescriptionId');
++						if (count($user_info->rows) > 0) {
++							$html = '<html xmlns="http://www.w3.org/1999/xhtml"><body><h4>Following medicine has been prescribed to:</h4><table><tr><td><strong>Patient:</strong></td><td>'.$user_info->rows[0]->value->first_nm.'</td></tr>';
++								if (count($medication_info->rows) > 0) {
++									for ($i=0; $i <count($medication_info->rows) ; $i++) { 
++											$html .= "<tr><td><strong>Drug Name:</strong></td><td>".$medication_info->rows[$i]->value->drug."</td></tr><tr><td><strong>Quantity:</strong></td><td>".$medication_info->rows[$i]->value->drug_quantity."</td></tr><tr><td><strong>Desperse Form:</strong></td><td>".$medication_info->rows[$i]->value->desperse_form."</td></tr>";		
++									}
++								}
++								$html .= '</table><body></html>';
++
++								$fields_array_mail_patient = array(
++									"from"    => "Sensory Health Systems Admin <noreply@sensoryhealthsystems.com>",
++									"to"      => $user_info->rows[0]->value->user_email,
++									"subject" => "Medication",
++									"html"    => $html
++								);
++						}
++						$result_mail_patient_obj = sendMail($fields_array_mail_patient);
++
++						if (isset($record->value->send_ERx_to_pharmacy)) {
++							$html = '<html xmlns="http://www.w3.org/1999/xhtml"><body><h4>Following medicine has been prescribed to:</h4><table><tr><td><strong>Patient:</strong></td><td>'.$user_info->rows[0]->value->first_nm.'</td></tr>';
+ 							if (count($medication_info->rows) > 0) {
+ 								for ($i=0; $i <count($medication_info->rows) ; $i++) { 
+ 										$html .= "<tr><td><strong>Drug Name:</strong></td><td>".$medication_info->rows[$i]->value->drug."</td></tr><tr><td><strong>Quantity:</strong></td><td>".$medication_info->rows[$i]->value->drug_quantity."</td></tr><tr><td><strong>Desperse Form:</strong></td><td>".$medication_info->rows[$i]->value->desperse_form."</td></tr>";		
+
+ 							}
+ 							$html .= '</table><body></html>';
+ 
+-							$fields_array_mail_patient = array(
++							$fields_array_mail = array(
+ 								"from"    => "Sensory Health Systems Admin <noreply@sensoryhealthsystems.com>",
+-								"to"      => $user_info->rows[0]->value->user_email,
++								"to"      => $pharmacy_doc->pharmacy_email,
+ 								"subject" => "Medication",
+ 								"html"    => $html
+-							);
+-					}
+-					$result_mail_patient_obj = sendMail($fields_array_mail_patient);
+-
+-					if (isset($record->value->send_ERx_to_pharmacy)) {
+-						$html = '<html xmlns="http://www.w3.org/1999/xhtml"><body><h4>Following medicine has been prescribed to:</h4><table><tr><td><strong>Patient:</strong></td><td>'.$user_info->rows[0]->value->first_nm.'</td></tr>';
+-						if (count($medication_info->rows) > 0) {
+-							for ($i=0; $i <count($medication_info->rows) ; $i++) { 
+-									$html .= "<tr><td><strong>Drug Name:</strong></td><td>".$medication_info->rows[$i]->value->drug."</td></tr><tr><td><strong>Quantity:</strong></td><td>".$medication_info->rows[$i]->value->drug_quantity."</td></tr><tr><td><strong>Desperse Form:</strong></td><td>".$medication_info->rows[$i]->value->desperse_form."</td></tr>";		
+-							}
+-						}
+-						$html .= '</table><body></html>';
+-
+-						$fields_array_mail = array(
+-							"from"    => "Sensory Health Systems Admin <noreply@sensoryhealthsystems.com>",
+-							"to"      => $pharmacy_doc->pharmacy_email,
+-							"subject" => "Medication",
+-							"html"    => $html
+-					 	);
+-						$result_obj = sendMail($fields_array_mail);
+-
+-						//SMS Sending...	
+-						$client->key($doctor_doc->dhp_code);
+-						$client->reduce(false);
+-						$client->include_docs(True);
+-						$comsettings = $client->getView('tamsa', 'getCommunicationSettings');
+-						
+-						// SEND SMS TO DOCTOR
+-		         	if($comsettings->rows[0]->doc->sms_setting->sms_to_doctor->pharmacy_new_order == 1) {
+-			         	$fields_array_sms = array(
+-									"To"   => $doctor_doc->alert_email,
+-									"From" => "+14085602499",
+-									"Body" => "Hello ".$doctor_doc->first_name." ".$doctor_doc->last_name	.",\nFollowing medicine has been prescribed to Patinent Name ".$user_info->rows[0]->value->first_nm."\n Pharmacy Name ".$pharmacy_doc->pharmacy_name
+-								);
+-								if (count($medication_info->rows) > 0) {
+-									for ($i=0; $i <count($medication_info->rows) ; $i++) { 
+-											$fields_array_sms["Body"] .= "\nDrug Name: ".$medication_info->rows[$i]->value->drug;	
+-									}
+-								}
+-								$result_sms_obj = sendSms($fields_array_sms);
+-							}
++						 	);
++							$result_obj = sendMail($fields_array_mail);
+ 
+-						// SMS TO hospital_admin
+-						$yes = "Yes";
+-						if($comsettings->rows[0]->doc->sms_setting->sms_to_hospital_admin->pharmacy_new_order	 == 1) {
+-							$doctor_details->key(array("".$doctor_doc->dhp_code."","".$yes.""));
+-		          $doctor_details->include_docs(True);
+-		          $hospital_details = $doctor_details->getView('tamsa', 'getUserByDhpId');
+-		          if(count($hospital_details->rows)>0){
+-		          	for($i=0;$i<count($hospital_details->rows);$i++){
+-		          		$fields_array_sms = array(
+-										"To"   => $hospital_details->rows[$i]->doc->alert_phone,
+-										"From" => "+14085602499",
+-										"Body" => "Hello, ".$doctor_doc->first_name." ".$doctor_doc->last_name	.",\nFollowing medicine has been prescribed to Patinent Name ".$user_info->rows[0]->value->first_nm."\n Pharmacy Name ".$pharmacy_doc->pharmacy_name
+-									);
+-								if (count($medication_info->rows) > 0) {
+-									for ($j=0; $j <count($medication_info->rows) ; $j++) { 
+-											$fields_array_sms["Body"] .= "\nDrug Name: ".$medication_info->rows[$j]->value->drug;	
+-									}
+-								}
+-								$result_sms_obj = sendSms($fields_array_sms);
+-		          	}
+-		          }		
++							//SMS Sending...	
++							$client->key($doctor_doc->dhp_code);
++							$client->reduce(false);
++							$client->include_docs(True);
++							$comsettings = $client->getView('tamsa', 'getCommunicationSettings');
++							
++							// SEND SMS TO DOCTOR
++			    //      	if($comsettings->rows[0]->doc->sms_setting->sms_to_doctor->pharmacy_new_order == 1) {
++				   //       	$fields_array_sms = array(
++							// 			"To"   => $doctor_doc->alert_email,
++							// 			"From" => "+14085602499",
++							// 			"Body" => "Hello ".$doctor_doc->first_name." ".$doctor_doc->last_name	.",\nFollowing medicine has been prescribed to Patinent Name ".$user_info->rows[0]->value->first_nm."\n Pharmacy Name ".$pharmacy_doc->pharmacy_name
++							// 		);
++							// 		if (count($medication_info->rows) > 0) {
++							// 			for ($i=0; $i <count($medication_info->rows) ; $i++) { 
++							// 					$fields_array_sms["Body"] .= "\nDrug Name: ".$medication_info->rows[$i]->value->drug;	
++							// 			}
++							// 		}
++									// $result_sms_obj = sendSms($fields_array_sms);
++							// 	}
++
++							// // SMS TO hospital_admin
++							// $yes = "Yes";
++							// if($comsettings->rows[0]->doc->sms_setting->sms_to_hospital_admin->pharmacy_new_order	 == 1) {
++							// 	$doctor_details->key(array("".$doctor_doc->dhp_code."","".$yes.""));
++			    //       $doctor_details->include_docs(True);
++			    //       $hospital_details = $doctor_details->getView('tamsa', 'getUserByDhpId');
++			    //       if(count($hospital_details->rows)>0){
++			    //       	for($i=0;$i<count($hospital_details->rows);$i++){
++			    //       		$fields_array_sms = array(
++							// 				"To"   => $hospital_details->rows[$i]->doc->alert_phone,
++							// 				"From" => "+14085602499",
++							// 				"Body" => "Hello, ".$doctor_doc->first_name." ".$doctor_doc->last_name	.",\nFollowing medicine has been prescribed to Patinent Name ".$user_info->rows[0]->value->first_nm."\n Pharmacy Name ".$pharmacy_doc->pharmacy_name
++							// 			);
++							// 		if (count($medication_info->rows) > 0) {
++							// 			for ($j=0; $j <count($medication_info->rows) ; $j++) { 
++							// 					$fields_array_sms["Body"] .= "\nDrug Name: ".$medication_info->rows[$j]->value->drug;	
++							// 			}
++							// 		}
++										// $result_sms_obj = sendSms($fields_array_sms);
++				    //       	}
++				    //       }		
++								// }
+ 						}
+-					}
++					}		
+ 			}
+ 			catch (Exception $e) {
+ 				if ( $e->getCode() == 404 ) {
+
+           }		
+ 				}
+ 					$record->value->processed = "Yes";
+-   				$response                 = $client->storeDoc($record->value);
++   					$response                 = $client->storeDoc($record->value);
+ 			} 
+ 			catch (Exception $e) {
+ 				if ( $e->getCode() == 404 ) {
+
+ 					"text"    => "Dr. ".$user_doc->first_name." \n ".$user_doc->last_name. " has ordered a imaging with following details \n Patinent Name : ".$record->value->patient_name."\n Order Number : ".$record->value->order_number."\n Tests: ".implode(" ,", $record->value->tests)
+ 			    );
+ 
+-	         	$result_obj = sendMail($fields_array_mail);
++	        $result_obj = sendMail($fields_array_mail);
+ 
+ 				$record->value->processed = "Yes";
+ 				$response                 = $client->storeDoc($record->value);
+
+ 		        	// Requesting document update with password change
+ 		            $response = $users_client->storeDoc($doc);
+ 
+-					$record->value->processed = "Yes";
+-					$response                 = $client->storeDoc($record->value);
++							$record->value->processed = "Yes";
++							$response                 = $client->storeDoc($record->value);
+ 		        } catch (Exception $e) {
+ 		            echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
+ 		            echo ("<pre>");print_r($record->value->operation_case);echo("</pre>");
+ 		            $record->value->processed = "Yes";
+-					$response                 = $client->storeDoc($record->value);
++								$response                 = $client->storeDoc($record->value);
+ 		        }
+ 		    }
+ 		    catch ( Exception $e ) {
+
+ 			        }
+ 			    echo ("<pre>");print_r($record->value->operation_case);echo("</pre>");
+ 			    $record->value->processed = "Yes";
+-				$response                 = $client->storeDoc($record->value);
++					$response                 = $client->storeDoc($record->value);
+ 		    }
+ 
+ 			$count["14"]++;
+ 			break;
+ 
+-		// Delete SubUser
++		 // Delete SubUser
++
+ 		case '15':
+ 			try {
+ 				$doc       = new stdClass();
+
+ 			    $users_client->deleteDoc($doc);
+ 
+ 			    $record->value->processed = "Yes";
+-				$response                 = $client->storeDoc($record->value);
++					$response                 = $client->storeDoc($record->value);
+ 				
+ 				$count["15"]++;
+ 			}
+
+ 			    echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
+ 			    echo ("<pre>");print_r($record->value->operation_case);echo("</pre>");
+ 			    $record->value->processed = "Yes";
+-				$response                 = $client->storeDoc($record->value);
++					$response                 = $client->storeDoc($record->value);
+ 			}
+ 			# code...
+ 			break;
+ 
+-		// Chnage Password of user
++		 // Chnage Password of user
++
+ 		case '16':
+ 			try {
+ 				// Getting the orignal document of the user whose password needs to be chnaged
+
+ 		   	$count["16"]++;
+ 		   	break;
+ 
+-		// Send bill to patient.
++		 // Send bill to patient.
++
+ 		case '17':
+ 			try {
+ 
+ 					// Getting the orignal document of the bill
+ 		    	$doc = $client->getDoc($record->value->bill_id);
+-		    	//echo ("<pre>");print_r($doc);echo("</pre>");
++		    	
+        		$doctor_doc = $users_client->getDoc($doc->doctor_id);
+-          //echo ("<pre>");print_r($doctor_doc);echo("</pre>");
++          
+ 
+        		$users_personal_details_client->key($doc->user_id);
+     			$response = $users_personal_details_client->getView('tamsa','getPatientInformation');
+ 
+-    			//echo ("<pre>");print_r($response);echo("</pre>");
++    			
+ 
+     			if (count($response->rows) > 0) {
+     				$first_nm       = $response->rows[0]->value->first_nm;
+
+ 	         		//Setting cron record processed
+ 	         		if (isset($result_obj->id)) {
+ 		   				$doc->email_sent_date = Date('Y-m-d');
+-		   				$response = $client->storeDoc($doc);
++		   					$response = $client->storeDoc($doc);
+ 	         		}
+ 		   				$record->value->processed = "Yes";
+-		   				$response = $client->storeDoc($record->value);
++		   					$response = $client->storeDoc($record->value);
+ 
+ 	           	} catch (Exception $e) {
+ 	            	echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
+
+ 	            	echo "Document some_doc_id does not exist !";
+ 	            	echo ("<pre>");print_r($record->value->operation_case);echo("</pre>");
+ 	            	$record->value->processed = "Yes";
+-		   			$response = $client->storeDoc($record->value);
++		   				$response = $client->storeDoc($record->value);
+ 	   	       	}
+ 		   	}
+ 			$count["17"]++;
+ 			break;
+ 
+-		// New Appointment
++		 // New Appointment
++
+ 		case '18':
+ 			try {
++				//check the case in day befor yesterday.
++				$nowdate = date('Y-m-d');
++				$string_date = strtotime("-1 day",strtotime($nowdate));
+ 				$doc        = $client->getDoc($record->value->appointment_id);
++				$dateapp = substr(getGmtStringToIstTime($doc->reminder_start),0,-9);
++				$strtotime = strtotime($dateapp);
++				if($string_date <= $strtotime){
+ 
+-				// If in the appointment doc doctor_id is saved than only procced further else mark the record processed
+-				if (isset($doc->doctor_id)) {
+-					$doctor_doc = $users_client->getDoc($doc->doctor_id);
+-				}
+-				else {
+-					$record->value->processed = "Yes";
+-					$response = $client->storeDoc($record->value);
+-					break;
+-				}
++					if (isset($doc->doctor_id)) {
++						$doctor_doc = $users_client->getDoc($doc->doctor_id);
++					}
++					else {
++						$record->value->processed = "Yes";
++						$response = $client->storeDoc($record->value);
++						break;
++					}
+ 
+-				if (isset($doc->consultant_id)) {
+-					$consultant_doc = $users_client->getDoc($doc->consultant_id);
+-				}
++					if (isset($doc->consultant_id)) {
++						$consultant_doc = $users_client->getDoc($doc->consultant_id);
++					}
+ 
+-				if (!isset($doc->user_id)) {
+-				    $client->deleteDoc($doc);
+-				    $record->value->processed = "Yes";
+-					$response                 = $client->storeDoc($record->value);
+-					$count["18"]++;
+-					break;
+-				}
+-				$user_doc = $users_client->getDoc($doc->doctor_id);
+-	       		$users_personal_details_client->key($doc->user_id);
+-				$response = $users_personal_details_client->getView('tamsa','getPatientInformation');
++					if (!isset($doc->user_id)) {
++					    $client->deleteDoc($doc);
++					    $record->value->processed = "Yes";
++							$response                 = $client->storeDoc($record->value);
++						$count["18"]++;
++						break;
++					}
++					$user_doc = $users_client->getDoc($doc->doctor_id);
++		       		$users_personal_details_client->key($doc->user_id);
++					$response = $users_personal_details_client->getView('tamsa','getPatientInformation');
+ 
+-				if (count($response->rows) > 0) {
+-					$client->key($doctor_doc->dhp_code);
+-					$client->reduce(false);
+-					$client->include_docs(True);
+-					$comsettings = $client->getView('tamsa', 'getCommunicationSettings');
+-					if($comsettings->rows[0]->value->email_setting->online_scheduling_emails == 1){
+-						$html = getAppointmentHtml("".$response->rows[0]->value->first_nm." ".$response->rows[0]->value->last_nm."", getGmtStringToIstTime($doc->reminder_start), $user_doc->hospital_affiliated, $user_doc->city, $user_doc->hospital_phone);
+-
+-						$attachment = array();
+-						if(isset($record->value->hospital_document)) {
+-							echo ("<pre>");print_r($record);echo("</pre>");
+-							$hospital_document           = $client->getDoc($record->value->hospital_document);
+-							$hospital_document_file_name = array_keys((array)$hospital_document->_attachments)[0];
+-							set_time_limit(0);
+-							$url  = urldecode("http://".DB_HOST."/".COUCH_DB."/".$record->value->hospital_document."/".$hospital_document_file_name);
+-							$file = file_get_contents(str_replace(" ","%20",$url));
+-							file_put_contents($hospital_document_file_name, $file);
+-							$attachment[] = $hospital_document_file_name;	
+-						}
++					if (count($response->rows) > 0) {
++						$client->key($doctor_doc->dhp_code);
++						$client->reduce(false);
++						$client->include_docs(True);
++						$comsettings = $client->getView('tamsa', 'getCommunicationSettings');
++						if($comsettings->rows[0]->value->email_setting->online_scheduling_emails == 1){
++							$html = getAppointmentHtml("".$response->rows[0]->value->first_nm." ".$response->rows[0]->value->last_nm."", getGmtStringToIstTime($doc->reminder_start), $user_doc->hospital_affiliated, $user_doc->city, $user_doc->hospital_phone);
+ 
+-						if (isset($record->value->service_documents)) {
+-							foreach ($record->value->service_documents as $service_doc_id) {
+-								$service_doc           = $client->getDoc($service_doc_id);
+-								$service_doc_file_name = array_keys((array)$service_doc->_attachments)[0];
++							$attachment = array();
++							if(isset($record->value->hospital_document)) {
++								$hospital_document           = $client->getDoc($record->value->hospital_document);
++								$hospital_document_file_name = array_keys((array)$hospital_document->_attachments)[0];
+ 								set_time_limit(0);
+-								$url  = urldecode("http://".DB_HOST."/".COUCH_DB."/".$service_doc_id."/".$service_doc_file_name);
++								$url  = urldecode("http://".DB_HOST."/".COUCH_DB."/".$record->value->hospital_document."/".$hospital_document_file_name);
+ 								$file = file_get_contents(str_replace(" ","%20",$url));
+-								file_put_contents($service_doc_file_name, $file);
+-								$attachment[] = $service_doc_file_name;
++								file_put_contents($hospital_document_file_name, $file);
++								$attachment[] = $hospital_document_file_name;	
+ 							}
+-						}
+-
+-						$fields_array_mail = array(
+-							"from"    => "Sensory Health Systems Admin <noreply@sensoryhealthsystems.com>",
+-							"to"      => $response->rows[0]->value->user_email,
+-							"subject" => "Appointment Mail",
+-							"html"    => $html
+-					    );
+ 
+-						if (count($attachment) > 0) {
+-							$attachment_to_send = array("attachment" => $attachment);
+-							$result_obj = sendMail($fields_array_mail,$attachment_to_send);
+-							foreach ($attachment as $file_to_delete) {
+-								unlink($file_to_delete);
++							if (isset($record->value->service_documents)) {
++								foreach ($record->value->service_documents as $service_doc_id) {
++									$service_doc           = $client->getDoc($service_doc_id);
++									$service_doc_file_name = array_keys((array)$service_doc->_attachments)[0];
++									set_time_limit(0);
++									$url  = urldecode("http://".DB_HOST."/".COUCH_DB."/".$service_doc_id."/".$service_doc_file_name);
++									$file = file_get_contents(str_replace(" ","%20",$url));
++									file_put_contents($service_doc_file_name, $file);
++									$attachment[] = $service_doc_file_name;
++								}
+ 							}
+-						}
+-						else {
+-							$result_obj = sendMail($fields_array_mail);
+-						}
+-					}	
+ 
+-		      // SEND SMS TO DOCTOR***************************
+-		      $yes = "Yes";
+-					if($comsettings->rows[0]->doc->sms_setting->sms_to_doctor->new_appointment == 1) {
+-						$fields_array_sms = array(
+-							"To"   => $doctor_doc->alert_phone,
+-							"From" => "+14085602499",
+-							"Body" => "Dr ".$user_doc->first_name." ".$user_doc->last_name." has scheduled appointment\nAppointment Note: ". $doc->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($doc->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($doc->reminder_start),-9)." to".substr(getGmtStringToIstTime($doc->reminder_end),-9)
+-						);
+-						$result_sms_obj = sendSms($fields_array_sms);
+-          }
+-
+-					// SMS TO hospital_admin
++							$fields_array_mail = array(
++								"from"    => "Sensory Health Systems Admin <noreply@sensoryhealthsystems.com>",
++								"to"      => $response->rows[0]->value->user_email,
++								"subject" => "Appointment Mail",
++								"html"    => $html
++						    );
+ 
+-					if($comsettings->rows[0]->doc->sms_setting->sms_to_hospital_admin->new_appointment == 1) {
+-						$doctor_details->key(array("".$doctor_doc->dhp_code."","".$yes.""));
+-            $doctor_details->include_docs(True);
+-            $hospital_details = $doctor_details->getView('tamsa', 'getUserByDhpId');
+-            if(count($hospital_details->rows)>0){
+-            	for($i=0;$i<count($hospital_details->rows);$i++){
+-            		$fields_array_sms = array(
+-									"To"   => $hospital_details->rows[$i]->doc->alert_phone,
+-									"From" => "+14085602499",
+-									"Body" => "Dr ".$user_doc->first_name." ".$user_doc->last_name." has scheduled appointment\nAppointment Note: ". $doc->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($doc->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($doc->reminder_start),-9)." to".substr(getGmtStringToIstTime($doc->reminder_end),-9)
+-								);
+-								$result_sms_obj = sendSms($fields_array_sms);		
++							if (count($attachment) > 0) {
++								$attachment_to_send = array("attachment" => $attachment);
++								$result_obj = sendMail($fields_array_mail,$attachment_to_send);
++								foreach ($attachment as $file_to_delete) {
++									unlink($file_to_delete);
++								}
+ 							}
+-            }
+-					}
++							else {
++								$result_obj = sendMail($fields_array_mail);
++							}
++						}	
+ 
+-					if (isset($consultant_doc)) {
+-						$client->key($consultant_doc->dhp_code);
+-						$client->reduce(false);
+-						$client->include_docs(True);
+-						$consultant_comsettings = $client->getView('tamsa', 'getCommunicationSettings');
+-						
+-		         		if($consultant_comsettings->rows[0]->doc->sms_setting->sms_to_doctor->new_appointment == 1) {
++			      // SEND SMS TO DOCTOR***************************
++			      $yes = "Yes";
++						if($comsettings->rows[0]->doc->sms_setting->sms_to_doctor->new_appointment == 1) {
+ 							$fields_array_sms = array(
+-								"To"   => $consultant_doc->alert_phone,
++								"To"   => $doctor_doc->alert_phone,
+ 								"From" => "+14085602499",
+ 								"Body" => "Dr ".$user_doc->first_name." ".$user_doc->last_name." has scheduled appointment\nAppointment Note: ". $doc->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($doc->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($doc->reminder_start),-9)." to".substr(getGmtStringToIstTime($doc->reminder_end),-9)
+ 							);
+ 							$result_sms_obj = sendSms($fields_array_sms);
++	          }
++
++						// SMS TO hospital_admin
++
++						if($comsettings->rows[0]->doc->sms_setting->sms_to_hospital_admin->new_appointment == 1) {
++							$doctor_details->key(array("".$doctor_doc->dhp_code."","".$yes.""));
++	            $doctor_details->include_docs(True);
++	            $hospital_details = $doctor_details->getView('tamsa', 'getUserByDhpId');
++	            if(count($hospital_details->rows)>0){
++	            	for($i=0;$i<count($hospital_details->rows);$i++){
++	            		$fields_array_sms = array(
++										"To"   => $hospital_details->rows[$i]->doc->alert_phone,
++										"From" => "+14085602499",
++										"Body" => "Dr ".$user_doc->first_name." ".$user_doc->last_name." has scheduled appointment\nAppointment Note: ". $doc->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($doc->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($doc->reminder_start),-9)." to".substr(getGmtStringToIstTime($doc->reminder_end),-9)
++									);
++									$result_sms_obj = sendSms($fields_array_sms);		
++								}
++	            }
++						}
++
++						if (isset($consultant_doc)) {
++							$client->key($consultant_doc->dhp_code);
++							$client->reduce(false);
++							$client->include_docs(True);
++							$consultant_comsettings = $client->getView('tamsa', 'getCommunicationSettings');
++							
++			         		if($consultant_comsettings->rows[0]->doc->sms_setting->sms_to_doctor->new_appointment == 1) {
++								$fields_array_sms = array(
++									"To"   => $consultant_doc->alert_phone,
++									"From" => "+14085602499",
++									"Body" => "Dr ".$user_doc->first_name." ".$user_doc->last_name." has scheduled appointment\nAppointment Note: ". $doc->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($doc->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($doc->reminder_start),-9)." to".substr(getGmtStringToIstTime($doc->reminder_end),-9)
++								);
++								$result_sms_obj = sendSms($fields_array_sms);
++							}
+ 						}
+-					}
+ 
++						$record->value->processed = "Yes";
++						$response = $client->storeDoc($record->value);
++					}
++				}else{
+ 					$record->value->processed = "Yes";
+-					$response = $client->storeDoc($record->value);
+-				}
+-			} 
++	   			$response = $client->storeDoc($record->value);
++				}	
++					} 
+ 			catch (Exception $e) {
+ 				if ( $e->getCode() == 404 ) {
+         	echo "Document some_doc_id does not exist !";
+
+ 			$count["18"]++;
+ 			break;
+ 
+-		// Apointment rescheduled
++		 // Apointment rescheduled
++
+ 		case '19':
+ 			try {
+ 				$doc = $client->getDoc($record->value->appointment_id);
++				$nowdate = date('Y-m-d');
++				$string_date = strtotime("-1 day",strtotime($nowdate));
++				$doc        = $client->getDoc($record->value->appointment_id);
++				$dateapp = substr(getGmtStringToIstTime($doc->reminder_start),0,-9);
++				$strtotime = strtotime($dateapp);
++				if($string_date <= $strtotime){
++					if (!isset($doc->user_id)) {
++					  $client->deleteDoc($doc);
++						$record->value->processed = "Yes";
++							$response = $client->storeDoc($record->value);
++						$count["19"]++;
++						break;
++					}
++
++					if (isset($doc->consultant_id) && $doc->consultant_id != "noselect") {
++						$consultant_doc = $users_client->getDoc($doc->consultant_id);
++					}
++
++					$user_doc = $users_client->getDoc($doc->doctor_id);
++					
++					$users_personal_details_client->key($doc->user_id);
++					$response = $users_personal_details_client->getView('tamsa','getPatientInformation');
+ 				
+-				if (!isset($doc->user_id)) {
+-				  $client->deleteDoc($doc);
++					if (count($response->rows) > 0) {
++						$fields_array_mail = array(
++							"from"    => "Sensory Health Systems Admin <noreply@sensoryhealthsystems.com>",
++							"to"      => $response->rows[0]->value->user_email,
++							"subject" => "Appointment Mail",
++							"text"    => "Dr ".$user_doc->first_name." ".$user_doc->last_name." has rescheduled your appointment\n Appointment Note: ".$doc->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($doc->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($doc->reminder_start),-9)." to".substr(getGmtStringToIstTime($doc->reminder_end),-9)
++					    );
++
++			      $result_obj = sendMail($fields_array_mail);
++
++						$client->key($doc->dhp_code);
++						$client->reduce(false);	
++						$client->include_docs(True);	
++						$comsettings          = $client->getView('tamsa', 'getCommunicationSettings');
++						$apt_reseduled_select = $comsettings->rows[0]->doc->sms_to_patient_setting->appointment_rescheduling;
++						
++			         	// SEND SMS TO PATEINTS
++						if($apt_reseduled_select != "Never") {
++							if($apt_reseduled_select == "Immediately") {
++								$fields_array_sms = array(
++									"To"   => $response->rows[0]->value->phone,
++									"From" => "+14085602499",
++									"Body" => "Dr ".$user_doc->first_name." ".$user_doc->last_name." has rescheduled your appointment\nAppointment Note: ". $doc->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($doc->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($doc->reminder_start),-9)." to".substr(getGmtStringToIstTime($doc->reminder_end),-9)
++								);
++									
++				        $result_sms_obj = sendSms($fields_array_sms);
++							}
++						}
++
++						// SEND SMS TO DOCTOR
++						if($comsettings->rows[0]->doc->sms_setting->sms_to_doctor->appointment_rescheduling == 1) {
++							$fields_array_sms = array(
++								"To"   => $user_doc->alert_phone,
++								"From" => "+14085602499",
++								"Body" => "Dr ".$user_doc->first_name." ".$user_doc->last_name." has rescheduled appointment.\nPatinet name: ".$response->rows[0]->value->first_nm." ".$response->rows[0]->value->last_nm."\nAppointment Note: ". $doc->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($doc->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($doc->reminder_start),-9)." to".substr(getGmtStringToIstTime($doc->reminder_end),-9)
++							);
++							$result_sms_obj_doc = sendSms($fields_array_sms);
++						}
++
++						// SMS TO HOSPITAL ADMIN
++						$yes = "Yes";
++						if($comsettings->rows[0]->doc->sms_setting->sms_to_hospital_admin->appointment_rescheduling == 1) {
++							$doctor_details->key(array("".$user_doc->dhp_code."","".$yes.""));
++	            $doctor_details->include_docs(True);
++	            $hospital_details = $doctor_details->getView('tamsa', 'getUserByDhpId');
++	            if(count($hospital_details->rows)>0){
++	            	for($i=0;$i<count($hospital_details->rows);$i++){
++	            		$fields_array_sms = array(
++										"To"   => $hospital_details->rows[$i]->doc->alert_phone,
++										"From" => "+14085602499",
++										"Body" => "Dr ".$user_doc->first_name." ".$user_doc->last_name." has rescheduled appointment.\nPatinet name: ".$response->rows[0]->value->first_nm." ".$response->rows[0]->value->last_nm."\nAppointment Note: ". $doc->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($doc->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($doc->reminder_start),-9)." to".substr(getGmtStringToIstTime($doc->reminder_end),-9)
++									);
++
++								$result_sms_obj = sendSms($fields_array_sms);		
++								}
++	            }
++						} 
++
++						if (isset($consultant_doc)) {
++							$client->key($consultant_doc->dhp_code);
++							$client->reduce(false);
++							$client->include_docs(True);
++							$consultant_comsettings = $client->getView('tamsa', 'getCommunicationSettings');
++							
++		         	if($consultant_comsettings->rows[0]->doc->sms_setting->sms_to_doctor->appointment_rescheduling == 1) {
++								$fields_array_sms = array(
++									"To"   => $consultant_doc->alert_phone,
++									"From" => "+14085602499",
++									"Body" => "Dr ".$user_doc->first_name." ".$user_doc->last_name." has rescheduled appointment.\nPatinet name: ".$response->rows[0]->value->first_nm." ".$response->rows[0]->value->last_nm."\nAppointment Note: ". $doc->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($doc->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($doc->reminder_start),-9)." to".substr(getGmtStringToIstTime($doc->reminder_end),-9)
++								);
++								
++				        $result_sms_obj = sendSms($fields_array_sms);
++							}
++						}
++						//Setting cron record processed
++						$record->value->processed = "Yes";
++						$response = $client->storeDoc($record->value);
++					}		
++				}else{
+ 					$record->value->processed = "Yes";
+-					$response = $client->storeDoc($record->value);
+-					$count["19"]++;
+-					break;
+-				}
++	   			$response = $client->storeDoc($record->value);
++				}	
++			} 
++			catch (Exception $e) {
++				if ( $e->getCode() == 404 ) {
++        	echo "Document some_doc_id does not exist !";
++        	echo ("<pre>");print_r($record->value->operation_case);echo("</pre>");
++          $record->value->processed = "Yes";
++	   				$response = $client->storeDoc($record->value);
++	   	  }	
++			}
++			$count["19"]++;
++			break;
+ 
+-				if (isset($doc->consultant_id) && $doc->consultant_id != "noselect") {
+-					$consultant_doc = $users_client->getDoc($doc->consultant_id);
++		// Appointment Cancel
++		case '20':
++			$nowdate = date('Y-m-d');
++			$string_date = strtotime("-1 day",strtotime($nowdate));
++			$dateapp = substr(getGmtStringToIstTime($record->value->reminder_start),0,-9);
++			$strtotime = strtotime($dateapp);
++			if($string_date <= $strtotime){
++				if (isset($record->value->consultant_id) && $record->value->consultant_id != "noselect" ) {
++					$consultant_doc = $users_client->getDoc($record->value->consultant_id);
+ 				}
+ 
+-				$user_doc = $users_client->getDoc($doc->doctor_id);
++				if (isset($record->value->doctor_id)) {
++						$user_doc = $users_client->getDoc($record->value->doctor_id);
++				}
+ 				
+-				$users_personal_details_client->key($doc->user_id);
++				$client->key($record->value->dhp_code);
++				$client->reduce(false);
++				$client->include_docs(True);
++				$comsettings       = $client->getView('tamsa', 'getCommunicationSettings');
++				$apt_cancel_select = $comsettings->rows[0]->doc->sms_to_patient_setting->appointemnt_cancellation;
++	      $users_personal_details_client->key($record->value->user_id);
+ 				$response = $users_personal_details_client->getView('tamsa','getPatientInformation');
+-			
+ 				if (count($response->rows) > 0) {
+ 					$fields_array_mail = array(
+ 						"from"    => "Sensory Health Systems Admin <noreply@sensoryhealthsystems.com>",
+ 						"to"      => $response->rows[0]->value->user_email,
+-						"subject" => "Appointment Mail",
+-						"text"    => "Dr ".$user_doc->first_name." ".$user_doc->last_name." has rescheduled your appointment\n Appointment Note: ".$doc->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($doc->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($doc->reminder_start),-9)." to".substr(getGmtStringToIstTime($doc->reminder_end),-9)
++						"subject" => "Appointment Cancellation",
++						"text"    => "Dr ".$record->value->doctor_name." has Cancel appointment\nAppointment Note: ".$record->value->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($record->value->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($record->value->reminder_start),-9)." to".substr(getGmtStringToIstTime($record->value->reminder_end),-9)
+ 				    );
++					$result_obj = sendMail($fields_array_mail);
+ 
+-		      $result_obj = sendMail($fields_array_mail);
+-
+-					$client->key($doc->dhp_code);
+-					$client->reduce(false);	
+-					$client->include_docs(True);	
+-					$comsettings          = $client->getView('tamsa', 'getCommunicationSettings');
+-					$apt_reseduled_select = $comsettings->rows[0]->doc->sms_to_patient_setting->appointment_rescheduling;
+-					
+-		         	// SEND SMS TO PATEINTS
+-					if($apt_reseduled_select != "Never") {
+-						if($apt_reseduled_select == "Immediately") {
++					//SMS Sending start....
++					if($apt_cancel_select != "Never") {
++						if($apt_cancel_select == "Immediately") {
+ 							$fields_array_sms = array(
+ 								"To"   => $response->rows[0]->value->phone,
+ 								"From" => "+14085602499",
+-								"Body" => "Dr ".$user_doc->first_name." ".$user_doc->last_name." has rescheduled your appointment\nAppointment Note: ". $doc->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($doc->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($doc->reminder_start),-9)." to".substr(getGmtStringToIstTime($doc->reminder_end),-9)
++								"Body" => "Dr ".$record->value->doctor_name." has Cancel your appointment\nAppointment Note: ".$record->value->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($record->value->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($record->value->reminder_start),-9)." to".substr(getGmtStringToIstTime($record->value->reminder_end),-9)
+ 							);
+-								
+-			        $result_sms_obj = sendSms($fields_array_sms);
++							$result_sms_obj = sendSms($fields_array_sms);
+ 						}
+ 					}
+-
++					
+ 					// SEND SMS TO DOCTOR
+-					if($comsettings->rows[0]->doc->sms_setting->sms_to_doctor->appointment_rescheduling == 1) {
++					if($comsettings->rows[0]->doc->sms_setting->sms_to_doctor->appointment_cancellation == 1) {
+ 						$fields_array_sms = array(
+ 							"To"   => $user_doc->alert_phone,
+ 							"From" => "+14085602499",
+-							"Body" => "Dr ".$user_doc->first_name." ".$user_doc->last_name." has rescheduled appointment.\nPatinet name: ".$response->rows[0]->value->first_nm." ".$response->rows[0]->value->last_nm."\nAppointment Note: ". $doc->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($doc->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($doc->reminder_start),-9)." to".substr(getGmtStringToIstTime($doc->reminder_end),-9)
++							"Body" => "Dr ".$record->value->doctor_name." has Cancel appointment\nAppointment Note: ".$record->value->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($record->value->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($record->value->reminder_start),-9)." to".substr(getGmtStringToIstTime($record->value->reminder_end),-9)
+ 						);
+-						$result_sms_obj_doc = sendSms($fields_array_sms);
++						$result_sms_obj = sendSms($fields_array_sms);
+ 					}
+ 
+ 					// SMS TO HOSPITAL ADMIN
+ 					$yes = "Yes";
+-					if($comsettings->rows[0]->doc->sms_setting->sms_to_hospital_admin->appointment_rescheduling == 1) {
++					if($comsettings->rows[0]->doc->sms_setting->sms_to_hospital_admin->appointment_cancellation == 0) {
++						
+ 						$doctor_details->key(array("".$user_doc->dhp_code."","".$yes.""));
+-            $doctor_details->include_docs(True);
+-            $hospital_details = $doctor_details->getView('tamsa', 'getUserByDhpId');
+-            if(count($hospital_details->rows)>0){
+-            	for($i=0;$i<count($hospital_details->rows);$i++){
+-            		$fields_array_sms = array(
++	          $doctor_details->include_docs(True);
++	          $hospital_details = $doctor_details->getView('tamsa', 'getUserByDhpId');
++	          if(count($hospital_details->rows)>0){
++	          	for($i=0;$i<count($hospital_details->rows);$i++){
++	          		$fields_array_sms = array(
+ 									"To"   => $hospital_details->rows[$i]->doc->alert_phone,
+ 									"From" => "+14085602499",
+-									"Body" => "Dr ".$user_doc->first_name." ".$user_doc->last_name." has rescheduled appointment.\nPatinet name: ".$response->rows[0]->value->first_nm." ".$response->rows[0]->value->last_nm."\nAppointment Note: ". $doc->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($doc->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($doc->reminder_start),-9)." to".substr(getGmtStringToIstTime($doc->reminder_end),-9)
++									"Body" => "Dr ".$record->value->doctor_name." has Cancel appointment\nAppointment Note: ".$record->value->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($record->value->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($record->value->reminder_start),-9)." to".substr(getGmtStringToIstTime($record->value->reminder_end),-9)
+ 								);
+-
+-							$result_sms_obj = sendSms($fields_array_sms);		
++								$result_sms_obj = sendSms($fields_array_sms);				
+ 							}
+-            }
++	          }
+ 					} 
+ 
+ 					if (isset($consultant_doc)) {
+
+ 						$client->include_docs(True);
+ 						$consultant_comsettings = $client->getView('tamsa', 'getCommunicationSettings');
+ 						
+-	         	if($consultant_comsettings->rows[0]->doc->sms_setting->sms_to_doctor->appointment_rescheduling == 1) {
++	       		if($consultant_comsettings->rows[0]->doc->sms_setting->sms_to_doctor->new_appointment == 1) {
+ 							$fields_array_sms = array(
+ 								"To"   => $consultant_doc->alert_phone,
+ 								"From" => "+14085602499",
+-								"Body" => "Dr ".$user_doc->first_name." ".$user_doc->last_name." has rescheduled appointment.\nPatinet name: ".$response->rows[0]->value->first_nm." ".$response->rows[0]->value->last_nm."\nAppointment Note: ". $doc->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($doc->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($doc->reminder_start),-9)." to".substr(getGmtStringToIstTime($doc->reminder_end),-9)
++								"Body" => "Dr ".$record->value->doctor_name." has Cancel appointment\nAppointment Note: ".$record->value->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($record->value->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($record->value->reminder_start),-9)." to".substr(getGmtStringToIstTime($record->value->reminder_end),-9)
+ 							);
+-							
+-			        $result_sms_obj = sendSms($fields_array_sms);
++							$result_sms_obj = sendSms($fields_array_sms);
+ 						}
+ 					}
+-					//Setting cron record processed
+ 					$record->value->processed = "Yes";
+ 					$response = $client->storeDoc($record->value);
+-				}		
+-			} 
+-			catch (Exception $e) {
+-				if ( $e->getCode() == 404 ) {
+-        	echo "Document some_doc_id does not exist !";
+-        	echo ("<pre>");print_r($record->value->operation_case);echo("</pre>");
+-          $record->value->processed = "Yes";
+-	   			$response = $client->storeDoc($record->value);
+-	   	  }	
+-			}
+-			$count["19"]++;
+-			break;
+-
+-		// Appointment Cancel
+-		case '20':
+-			if (isset($record->value->consultant_id) && $record->value->consultant_id != "noselect" ) {
+-				$consultant_doc = $users_client->getDoc($record->value->consultant_id);
+-			}
+-
+-			if (isset($record->value->doctor_id)) {
+-					$user_doc = $users_client->getDoc($record->value->doctor_id);
+-			}
+-				
+-			
+-			$client->key($record->value->dhp_code);
+-			$client->reduce(false);
+-			$client->include_docs(True);
+-			$comsettings       = $client->getView('tamsa', 'getCommunicationSettings');
+-			$apt_cancel_select = $comsettings->rows[0]->doc->sms_to_patient_setting->appointemnt_cancellation;
+-      $users_personal_details_client->key($record->value->user_id);
+-			$response = $users_personal_details_client->getView('tamsa','getPatientInformation');
+-			if (count($response->rows) > 0) {
+-				$fields_array_mail = array(
+-					"from"    => "Sensory Health Systems Admin <noreply@sensoryhealthsystems.com>",
+-					"to"      => $response->rows[0]->value->user_email,
+-					"subject" => "Appointment Cancellation",
+-					"text"    => "Dr ".$record->value->doctor_name." has Cancel appointment\nAppointment Note: ".$record->value->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($record->value->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($record->value->reminder_start),-9)." to".substr(getGmtStringToIstTime($record->value->reminder_end),-9)
+-			    );
+-				$result_obj = sendMail($fields_array_mail);
+-
+-				//SMS Sending start....
+-				if($apt_cancel_select != "Never") {
+-					if($apt_cancel_select == "Immediately") {
+-						$fields_array_sms = array(
+-							"To"   => $response->rows[0]->value->phone,
+-							"From" => "+14085602499",
+-							"Body" => "Dr ".$record->value->doctor_name." has Cancel your appointment\nAppointment Note: ".$record->value->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($record->value->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($record->value->reminder_start),-9)." to".substr(getGmtStringToIstTime($record->value->reminder_end),-9)
+-						);
+-						$result_sms_obj = sendSms($fields_array_sms);
+-					}
+-				}
+-				
+-				// SEND SMS TO DOCTOR
+-				if($comsettings->rows[0]->doc->sms_setting->sms_to_doctor->appointment_cancellation == 1) {
+-					$fields_array_sms = array(
+-						"To"   => $user_doc->alert_phone,
+-						"From" => "+14085602499",
+-						"Body" => "Dr ".$record->value->doctor_name." has Cancel appointment\nAppointment Note: ".$record->value->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($record->value->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($record->value->reminder_start),-9)." to".substr(getGmtStringToIstTime($record->value->reminder_end),-9)
+-					);
+-					$result_sms_obj = sendSms($fields_array_sms);
+-				}
+-
+-				// SMS TO HOSPITAL ADMIN
+-				$yes = "Yes";
+-				if($comsettings->rows[0]->doc->sms_setting->sms_to_hospital_admin->appointment_cancellation == 0) {
+-					
+-					$doctor_details->key(array("".$user_doc->dhp_code."","".$yes.""));
+-          $doctor_details->include_docs(True);
+-          $hospital_details = $doctor_details->getView('tamsa', 'getUserByDhpId');
+-          if(count($hospital_details->rows)>0){
+-          	for($i=0;$i<count($hospital_details->rows);$i++){
+-          		$fields_array_sms = array(
+-								"To"   => $hospital_details->rows[$i]->doc->alert_phone,
+-								"From" => "+14085602499",
+-								"Body" => "Dr ".$record->value->doctor_name." has Cancel appointment\nAppointment Note: ".$record->value->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($record->value->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($record->value->reminder_start),-9)." to".substr(getGmtStringToIstTime($record->value->reminder_end),-9)
+-							);
+-							$result_sms_obj = sendSms($fields_array_sms);				
+-						}
+-          }
+-				} 
+-
+-				if (isset($consultant_doc)) {
+-					$client->key($consultant_doc->dhp_code);
+-					$client->reduce(false);
+-					$client->include_docs(True);
+-					$consultant_comsettings = $client->getView('tamsa', 'getCommunicationSettings');
+-					
+-       		if($consultant_comsettings->rows[0]->doc->sms_setting->sms_to_doctor->new_appointment == 1) {
+-						$fields_array_sms = array(
+-							"To"   => $consultant_doc->alert_phone,
+-							"From" => "+14085602499",
+-							"Body" => "Dr ".$record->value->doctor_name." has Cancel appointment\nAppointment Note: ".$record->value->reminder_note."\n Appointment Date: ".substr(getGmtStringToIstTime($record->value->reminder_start),0,-9)."\n Appointment time:".substr(getGmtStringToIstTime($record->value->reminder_start),-9)." to".substr(getGmtStringToIstTime($record->value->reminder_end),-9)
+-						);
+-						$result_sms_obj = sendSms($fields_array_sms);
+-					}
+ 				}
++				$count["20"]++;
++				break;
++			}else{
+ 				$record->value->processed = "Yes";
+ 				$response = $client->storeDoc($record->value);
+-			}
+-			$count["20"]++;
+-			break;
++				$count["20"]++;
++				break;
++			}	
+ 
+ 		//To add the user into users database and send mail to respective users
+ 		case '21':
+
+ 	         	$result_obj = sendMail($fields_array_mail);
+ 
+          		$record->value->processed = "Yes";
+-	   			$response                 = $client->storeDoc($record->value);
++	   				$response                 = $client->storeDoc($record->value);
+ 			} 
+ 			catch (Exception $e) {
+ 				if ( $e->getCode() == 409 ) {
+
+ 
+    		         	$result_obj = sendMail($error_mail);
+ 
+-   	         		echo ("<pre>");print_r($record);echo("</pre>");
++   	         		// echo ("<pre>");print_r($record);echo("</pre>");
+    	         		$record->value->processed = "Yes";
+-   		   			$response                 = $client->storeDoc($record->value);
++   		   				$response                 = $client->storeDoc($record->value);
+ 			    }
+ 			    else {
+ 					echo ("<pre>");print_r($e);echo("</pre>");
+
+ 		        	// Requesting document update with fields change
+ 		            $response                 = $users_client->storeDoc($doc);
+ 		            $record->value->processed = "Yes";
+-	   				$response                 = $client->storeDoc($record->value);
++	   					$response                 = $client->storeDoc($record->value);
+ 
+ 	           	} catch (Exception $e) {
+ 	            	echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
+ 	            	echo ("<pre>");print_r($record->value->operation_case);echo("</pre>");
+ 	            	$record->value->processed = "Yes";
+-	   				$response                 = $client->storeDoc($record->value);
++	   					$response                 = $client->storeDoc($record->value);
+ 	           	}
+ 		    } 
+ 		    catch ( Exception $e ) {
+
+ 		case '23':
+ 			try {
+ 				$doca       = $client->getDoc($record->value->doc_id);
+-				$doctor_doc = $users_client->getDoc($doca->doctor_id);
+-				$client->key($doctor_doc->dhp_code);
+-				$client->reduce(false);
+-				$client->include_docs(True);
+-				$comsettings = $client->getView('tamsa', 'getCommunicationSettings');
++				if(isset($doca->doctor_id)){
++					$doctor_doc = $users_client->getDoc($doca->doctor_id);
++					$client->key($doctor_doc->dhp_code);
++					$client->reduce(false);
++					$client->include_docs(True);
++					$comsettings = $client->getView('tamsa', 'getCommunicationSettings');
+ 
+-				$doc = $client->getDoc($record->value->doc_id);
+-				//new_lab_order_results_availabel
+-				if($comsettings->rows[0]->doc->sms_to_patient_setting->new_lab_order_results_availabel == "Immediately"){
+-					$users_personal_details_client->key($doc->user_id);						
+-					$users_personal_details_client->reduce(TRUE);
+-					$user_details = $users_personal_details_client->getView('tamsa', 'getPatientInformation');
++					$doc = $client->getDoc($record->value->doc_id);
++					//new_lab_order_results_availabel
++					if($comsettings->rows[0]->doc->sms_to_patient_setting->new_lab_order_results_availabel == "Immediately"){
++						$users_personal_details_client->key($doc->user_id);						
++						$users_personal_details_client->reduce(TRUE);
++						$user_details = $users_personal_details_client->getView('tamsa', 'getPatientInformation');
+ 
+-					### GETTING PATIENTS   ###					
+-					$fields_array_sms = array(
+-						"To"   => $user_details->rows[0]->value->phone,
+-						"From" => "+14085602499",
+-						"Body" => "new_lab_order_results_availabel"
+-					);
++						### GETTING PATIENTS   ###					
++						$fields_array_sms = array(
++							"To"   => $user_details->rows[0]->value->phone,
++							"From" => "+14085602499",
++							"Body" => "new_lab_order_results_availabel"
++						);
+ 
+-		         	$result_sms_obj = sendSms($fields_array_sms);
+-				}		
+-				$fields_array_mail = array(
+-					"from"    => "Sensory Health Systems Admin <noreply@sensoryhealthsystems.com>",
+-					"to"      => $record->value->email,
+-					"subject" => "Comments on your lab result by ".$record->value->doctor_name,
+-					"text"    => "Hello ".$record->value->patient_name.",\n Test Name : ".$doc->document_name."\n Comment : ".$record->value->comment. "\n By : ".$record->value->doctor_name
+-			    );
++			         	$result_sms_obj = sendSms($fields_array_sms);
++					}		
++					$fields_array_mail = array(
++						"from"    => "Sensory Health Systems Admin <noreply@sensoryhealthsystems.com>",
++						"to"      => $record->value->email,
++						"subject" => "Comments on your lab result by ".$record->value->doctor_name,
++						"text"    => "Hello ".$record->value->patient_name.",\n Test Name : ".$doc->document_name."\n Comment : ".$record->value->comment. "\n By : ".$record->value->doctor_name
++				    );
+ 
+-		     	$result_obj = sendMail($fields_array_mail);
++			     	$result_obj = sendMail($fields_array_mail);
+ 
+-				// SEND SMS TO DOCTOR
+-         		if($comsettings->rows[0]->doc->sms_setting->sms_to_doctor->lab_new_order == 1) {
+-					$fields_array_sms = array(
+-						"To"   => $doctor_doc->alert_email,
+-						"From" => "+14085602499",
+-						"Body" => "lab new order doctor"
+-					);
++					// SEND SMS TO DOCTOR
++	         		if($comsettings->rows[0]->doc->sms_setting->sms_to_doctor->lab_new_order == 1) {
++						$fields_array_sms = array(
++							"To"   => $doctor_doc->alert_email,
++							"From" => "+14085602499",
++							"Body" => "lab new order doctor"
++						);
+ 
+-		         	$result_sms_obj = sendSms($fields_array_sms);
+-				}
++			         	$result_sms_obj = sendSms($fields_array_sms);
++					}
+ 
+-				// SMS TO hospital_admin
+-				if($comsettings->rows[0]->doc->sms_setting->sms_to_hospital_admin->lab_new_order == 1) {
+-					$fields_array_sms = array(
+-						"To"   => $doctor_doc->alert_email,
+-						"From" => "+14085602499",
+-						"Body" => "lab new order hospital admin"
+-					);
+-					$result_sms_obj = sendSms($fields_array_sms);
+-				}
++					// SMS TO hospital_admin
++					if($comsettings->rows[0]->doc->sms_setting->sms_to_hospital_admin->lab_new_order == 1) {
++						$fields_array_sms = array(
++							"To"   => $doctor_doc->alert_email,
++							"From" => "+14085602499",
++							"Body" => "lab new order hospital admin"
++						);
++						$result_sms_obj = sendSms($fields_array_sms);
++					}
+ 
+-				$record->value->processed = "Yes";
+-				$response                 = $client->storeDoc($record->value);
++					$record->value->processed = "Yes";
++						$response                 = $client->storeDoc($record->value);
++				}
+ 			} 
+ 			catch (Exception $e) {
+ 	         	echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
+ 	         	echo ("<pre>");print_r($record->value->operation_case);echo("</pre>");
+ 	         	$record->value->processed = "Yes";
+-					$response  = $client->storeDoc($record->value);
++						$response  = $client->storeDoc($record->value);
+ 			}
+ 
+ 			$count["23"]++;
+ 			break;
+ 
+-		//Sending mail on comment of doctor on telemedecine inquiry
++		 //Sending mail on comment of doctor on telemedecine inquiry
++			
+ 		case '24':
+ 			try {
+-				$doc        = $client->getDoc($record->value->doc_id);
+-				$doctor_doc = $users_client->getDoc($doc->response_doctor_id);
+-				$users_personal_details_client->key($doc->user_id);
+-				$user_details      = $users_personal_details_client->getView('tamsa', 'getPatientInformation');
+-				$fields_array_mail = array(
+-					"from"    => "Sensory Health Systems Admin <noreply@sensoryhealthsystems.com>",
+-					"to"      => $doc->user_email,
+-					"subject" => "Comments on your telemedicine inquiry result by ".$doctor_doc->first_name,
+-					"text"    => "Hello ".$user_details->rows[0]->value->first_nm." ".$user_details->rows[0]->value->last_nm.",\n Your telemedicine response from Dr.".$doctor_doc->first_name."\n"
+-			    );
++				if(isset($record->value->doc_id)){
++					$doc        = $client->getDoc($record->value->doc_id);
++					$doctor_doc = $users_client->getDoc($doc->response_doctor_id);
++					$users_personal_details_client->key($doc->user_id);
++					$user_details      = $users_personal_details_client->getView('tamsa', 'getPatientInformation');
++					$fields_array_mail = array(
++						"from"    => "Sensory Health Systems Admin <noreply@sensoryhealthsystems.com>",
++						"to"      => $doc->user_email,
++						"subject" => "Comments on your telemedicine inquiry result by ".$doctor_doc->first_name,
++						"text"    => "Hello ".$user_details->rows[0]->value->first_nm." ".$user_details->rows[0]->value->last_nm.",\n Your telemedicine response from Dr.".$doctor_doc->first_name."\n"
++				    );
+ 
+-			    foreach ($doc->Response as $res) {
+-			    	$fields_array_mail['text'] .= substr($res->time, 0, 10).":".$res->response."\n\n";
+-			    }
++				    foreach ($doc->Response as $res) {
++				    	$fields_array_mail['text'] .= substr($res->time, 0, 10).":".$res->response."\n\n";
++				    }
+ 
+ 		     	$result_obj = sendMail($fields_array_mail);
+ 
+-				$record->value->processed = "Yes";
+-				$response                 = $client->storeDoc($record->value);
++					$record->value->processed = "Yes";
++						$response                 = $client->storeDoc($record->value);
++				}    
+ 			} 
+ 			catch (Exception $e) {
+ 	         	echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
+ 	         	echo ("<pre>");print_r($record->value->operation_case);echo("</pre>");
+ 	         	$record->value->processed = "Yes";
+-				$response                 = $client->storeDoc($record->value);
++					$response                 = $client->storeDoc($record->value);
+ 			}
+ 
+ 			$count["24"]++;
+
+ 			    );
+ 			    $attachment = array("attachment" => array($file_name));
+ 			    $result_obj = sendMail($fields_array_mail,$attachment);
+-			      	 //	print_r($result_obj);
++			      	 
+ 				unlink($file_name);
+ 
+ 				$record->value->processed = "Yes";
+-				$response                 = $client->storeDoc($record->value);
++					$response                 = $client->storeDoc($record->value);
+ 			} 
+ 			catch (Exception $e) {
+          		echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
+        		  	echo ("<pre>");print_r($record->value->operation_case);echo("</pre>");
+          		$record->value->processed = "Yes";
+-				$response                 = $client->storeDoc($record->value);
++					$response                 = $client->storeDoc($record->value);
+ 			}
+ 
+ 			$count['25']++;
+ 			break;
+ 
+ 					//	
++
+ 		case '26':
+ 			$doc       = $client->getDoc($record->value->document_id);
+ 			$doctor_doc = $users_client->getDoc($doc->doctor_id);
+
+ 			}
+ 
+ 			$record->value->processed = "Yes";
+-			$response                 = $client->storeDoc($record->value);
++				$response                 = $client->storeDoc($record->value);
+ 
+ 			break;
+ 
